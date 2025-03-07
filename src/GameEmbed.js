@@ -79,7 +79,7 @@ function GameEmbed() {
 
   return (
     <iframe
-      src="/game.html"
+      src="https://runesaredead.github.io/mariodins-flight/"
       style={{ 
         width: "100%",
         height: "100%",
