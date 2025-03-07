@@ -195,30 +195,13 @@ cvs.addEventListener("click", function(event)
             }
             break;
         case state.gameOver:
-            // Check if submit score button was clicked
-            if(clickX >= gameOver.submitButton.x && 
-               clickX <= gameOver.submitButton.x + gameOver.submitButton.w && 
-               clickY >= gameOver.submitButton.y && 
-               clickY <= gameOver.submitButton.y + gameOver.submitButton.h)
-            {
-                gameOver.submitScore();
-                if(!mute)
-                {
-                    SWOOSH.currentTime = 0;
-                    SWOOSH.play();
-                }
-            }
             // Restart button
-            else if(clickX >= gameButtons.restart_button.x && 
-                   clickX <= gameButtons.restart_button.x + gameButtons.restart_button.w &&
-                   clickY >= gameButtons.restart_button.y && 
-                   clickY <= gameButtons.restart_button.y + gameButtons.restart_button.h)
+            if(clickX >= gameButtons.restart_button.x && clickX <= gameButtons.restart_button.x + gameButtons.restart_button.w &&
+               clickY >= gameButtons.restart_button.y && clickY <= gameButtons.restart_button.y + gameButtons.restart_button.h)
             {
                 pipes.pipesReset();
                 bird.speedReset();
                 score.scoreReset();
-                gameOver.scoreSubmitted = false; // Reset score submitted flag
-                gameOver.notBestScore = false; // Reset not best score flag
                 gameButtons.restart_button.isPressed = false;
                 state.current = state.getReady;
                 if(!mute)
@@ -228,16 +211,12 @@ cvs.addEventListener("click", function(event)
                 }
             }
             // Home button
-            else if(clickX >= gameButtons.home_button.x && 
-                    clickX <= gameButtons.home_button.x + gameButtons.home_button.w &&
-                    clickY >= gameButtons.home_button.y && 
-                    clickY <= gameButtons.home_button.y + gameButtons.home_button.h)
+            else if(clickX >= gameButtons.home_button.x && clickX <= gameButtons.home_button.x + gameButtons.home_button.w &&
+                    clickY >= gameButtons.home_button.y && clickY <= gameButtons.home_button.y + gameButtons.home_button.h)
             {
                 pipes.pipesReset();
                 bird.speedReset();
                 score.scoreReset();
-                gameOver.scoreSubmitted = false; // Reset score submitted flag
-                gameOver.notBestScore = false; // Reset not best score flag
                 gameButtons.home_button.isPressed = false;
                 state.current = state.home;
                 if(!mute)
@@ -1242,61 +1221,11 @@ const gameOver =
         w: 0, h: 0
     },
 
-    // Add submit score button
-    submitButton : 
-    {
-        x: 0, y: 0, 
-        w: 0, h: 0,
-        isHovered: false,
-        // True red color with dark brown border like the RESTART button
-        bgColor: "#FF0000",
-        borderColor: "#8B4513"
-    },
-
-    // Track if score has been submitted
-    scoreSubmitted: false,
-    // Track if score was not submitted because it's not the best score
-    notBestScore: false,
-
-    // Submit score to leaderboard
-    submitScore: function() {
-        if (this.scoreSubmitted) return; // Prevent multiple submissions
-        
-        // Only submit if this is the user's best score or equal to it
-        if (score.game_score < score.best_score && score.best_score > 0) {
-            console.log('Not submitting score as it is not the best score:', score.game_score, 'Best:', score.best_score);
-            // Show a message to the user that only best scores are submitted
-            this.notBestScore = true;
-            return;
-        }
-        
-        // Get wallet address from parent window if available
-        let walletAddress = "";
-        try {
-            if (window.parent && window.parent.walletAddress) {
-                walletAddress = window.parent.walletAddress;
-            }
-        } catch (e) {
-            console.log("Could not access parent wallet address");
-        }
-        
-        // Send message to parent window (React app)
-        window.parent.postMessage({
-            type: 'gameScore',
-            score: score.game_score,
-            isNewHighScore: score.game_score >= score.best_score,
-            walletAddress: walletAddress
-        }, '*');
-        
-        this.scoreSubmitted = true;
-        this.notBestScore = false;
-        console.log('Score submitted:', score.game_score);
-    },
-
     draw : function() 
     {
         if(state.current == state.gameOver)
         {
+
             ctx.drawImage(
                             sprite_sheet, 
                             this.game_over.spriteX, this.game_over.spriteY, 
@@ -1311,50 +1240,6 @@ const gameOver =
                             this.scoreboard.x, this.scoreboard.y, 
                             this.scoreboard.w, this.scoreboard.h
                          );
-            
-            // Draw submit score button with style matching RESTART button
-            // Draw border
-            ctx.fillStyle = this.submitButton.borderColor;
-            ctx.fillRect(this.submitButton.x - 4, this.submitButton.y - 4, 
-                        this.submitButton.w + 8, this.submitButton.h + 8);
-            
-            // Draw button background
-            ctx.fillStyle = this.submitButton.bgColor;
-            ctx.fillRect(this.submitButton.x, this.submitButton.y, 
-                        this.submitButton.w, this.submitButton.h);
-            
-            // Button text
-            ctx.fillStyle = "#FFFFFF";
-            // Make text smaller to fit within button
-            ctx.font = "bold " + Math.floor(cvs.height * 0.03) + "px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            
-            // Get wallet address from parent window if available
-            let buttonText = this.scoreSubmitted ? "SCORE SUBMITTED!" : "SUBMIT SCORE";
-            
-            // If score was not submitted because it's not the best score
-            if (this.notBestScore) {
-                buttonText = "ONLY BEST SCORES";
-            }
-            // Try to get wallet address from parent window
-            else try {
-                if (window.parent && window.parent.walletAddress && !this.scoreSubmitted && !this.notBestScore) {
-                    const address = window.parent.walletAddress;
-                    if (address && address.length > 4) {
-                        const lastFour = address.slice(-4);
-                        buttonText = `SUBMIT AS ${lastFour}`;
-                    }
-                }
-            } catch (e) {
-                console.log("Could not access parent wallet address");
-            }
-            
-            ctx.fillText(
-                buttonText, 
-                this.submitButton.x + this.submitButton.w/2, 
-                this.submitButton.y + this.submitButton.h/2
-            );
         }
     }
 }
@@ -1746,18 +1631,12 @@ function canvasScale()
     gameOver.game_over.x = cvs.width * 0.182;
     gameOver.game_over.y = cvs.height * 0.243;
     gameOver.game_over.w = cvs.width * 0.645;
-    gameOver.game_over.h = cvs.height * 0.095;
-    
+    gameOver.game_over.h = cvs.height * 0.095; 
+    // Scoreboard
     gameOver.scoreboard.x = cvs.width * 0.107;
     gameOver.scoreboard.y = cvs.height * 0.355;
     gameOver.scoreboard.w = cvs.width * 0.782;
     gameOver.scoreboard.h = cvs.height * 0.289;
-    
-    // Submit score button
-    gameOver.submitButton.x = cvs.width * 0.3;
-    gameOver.submitButton.y = cvs.height * 0.67;
-    gameOver.submitButton.w = cvs.width * 0.4;
-    gameOver.submitButton.h = cvs.height * 0.07;
 
     // SCORE
     // New best score label
@@ -1887,36 +1766,4 @@ if(state.current == state.gameOver) {
         type: 'gameEnd',
         score: score.game_score
     }, '*');
-}
-
-// MOUSEMOVE HANDLER - For button hover effect
-cvs.addEventListener("mousemove", function(evt)
-{
-    if(state.current == state.gameOver)
-    {
-        let rect = cvs.getBoundingClientRect();
-        let mouseX = evt.clientX - rect.left;
-        let mouseY = evt.clientY - rect.top;
-        
-        // Check if mouse is over submit score button
-        gameOver.submitButton.isHovered = (
-            mouseX >= gameOver.submitButton.x && 
-            mouseX <= gameOver.submitButton.x + gameOver.submitButton.w && 
-            mouseY >= gameOver.submitButton.y && 
-            mouseY <= gameOver.submitButton.y + gameOver.submitButton.h
-        );
-    }
-});
-
-// Reset score submitted flag when game restarts
-function resetGame()
-{
-    // ... existing code ...
-    
-    // Reset score submitted flag
-    gameOver.scoreSubmitted = false;
-    // Reset not best score flag
-    gameOver.notBestScore = false;
-    
-    // ... existing code ...
 }

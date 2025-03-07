@@ -88,7 +88,7 @@ function GameEmbed() {
   return (
     <div className="game-container">
       <iframe
-        src="/mariodins-flight-main/index.html"
+        src="/game.html"
         title="Mario Dins Flight"
         style={{ width: '100%', height: '600px', border: 'none' }}
       />

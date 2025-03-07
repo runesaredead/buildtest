@@ -9,11 +9,6 @@ function GameEmbed() {
   const { address } = useLaserEyes();
 
   useEffect(() => {
-    // Make wallet address available to the iframe
-    if (address) {
-      window.walletAddress = address;
-    }
-    
     const handleGameEnd = async (event) => {
       // Skip wallet extension messages
       if (event.data && typeof event.data === 'object' && 
@@ -22,13 +17,12 @@ function GameEmbed() {
         return; // Ignore wallet messages
       }
       
-      // Process both gameEnd and gameScore message types
+      // Only process game end messages
       if (event.data && typeof event.data === 'object' && 
-          ((event.data.type === 'gameEnd' && 'score' in event.data) ||
-           (event.data.type === 'gameScore' && 'score' in event.data))) {
+          event.data.type === 'gameEnd' && 'score' in event.data) {
         
         const score = event.data.score;
-        console.log(`Received ${event.data.type} message with score:`, score);
+        console.log('Game over! Final score:', score);
         
         if (!address) {
           console.log('No wallet connected - please connect wallet first');
@@ -36,9 +30,7 @@ function GameEmbed() {
         }
 
         try {
-          // Use last 4 characters of address for display name
-          const lastFour = address.slice(-4);
-          const playerDisplayName = address.substring(0, 4) + '...' + lastFour;
+          const playerDisplayName = address.substring(0, 4) + '...';
           
           const payload = {
             leaderboardId: LEADERBOARD_ID,
@@ -87,7 +79,7 @@ function GameEmbed() {
 
   return (
     <iframe
-      src="/mariodins-flight-main/index.html"
+      src="https://runesaredead.github.io/mariodins-flight/"
       style={{ 
         width: "100%",
         height: "100%",
